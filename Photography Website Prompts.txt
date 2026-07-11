@@ -1,0 +1,21 @@
+Photography Website Prompts
+
+homepage
+Build a homepage for a   wedding photographer named Karina. Strictly black and white — black   background (#000000), white text (#FFFFFF), no color accents. Full-screen   hero section with a background image placeholder and a dark overlay. Her name   "Karina" in Viaoda Libre serif font, tagline "Capturing Love   Stories" in Pinyon Script italic below it. Navigation bar with links:   Home, Gallery, About, Contact — minimal, white text, no background. Below the   hero: a brief intro paragraph in DM Sans and 3 preview gallery thumbnails in   a row, desaturated to grayscale. Fully responsive for mobile. File:   index.html with embedded CSS. Use Google Fonts for Viaoda Libre, Pinyon   Script, and DM Sans.
+
+Gallery
+Create gallery.html for this wedding photography website. Same aesthetic: black background (#000000), white text (#FFFFFF), no color accents, same navigation bar. Display 12 photos in a masonry grid layout using placeholder images from picsum.photos — apply a CSS grayscale filter to all images so they appear black and white. When a user clicks a photo, open it in a lightbox overlay with the image enlarged, a white close button (X), and left/right arrow navigation. Add smooth fade animations. Fully responsive. Same fonts: Viaoda Libre, Pinyon Script, DM Sans via Google Fonts.
+
+About
+ Create about.html for   this wedding photography website. Black background (#000000), white text   (#FFFFFF), no color accents, same navigation. Two-column layout: circular   headshot placeholder on the left (280px), bio text in DM Sans on the right (2   paragraphs about a wedding photographer). Below both columns: a full-width   testimonial section — the quote in Pinyon Script at large size, the   attribution in small DM Sans caps below. No colored borders, no colored   boxes. Just type and space. Fully responsive — stack to single column on   mobile. Same Google Fonts.
+
+contact
+  Create contact.html for   this wedding photography website. Black background (#000000), white text   (#FFFFFF), no color accents, same navigation. Centered contact form with   generous spacing: name field, email field, message textarea. All inputs have   a white bottom border only (no box), white placeholder text at low opacity,   and white text on focus. Submit button: white background, black text, with a   hover state that inverts to black background, white text. Below the form: a   small Instagram icon link in white. Form does not need to submit — show a   simple "Thank you. I'll be in touch soon." message on click. Same   Google Fonts.
+
+updates:
+
+Add smooth fade-in   animations to every page. When the page loads, the hero text should fade in   with a gentle upward drift. Section headings should fade in as they scroll   into view. Keep animations subtle — this is an elegant site, not a flashy   one.
+
+ Add a   scroll-to-top button that appears after the user scrolls down 400px on any   page — a small white circle with an upward arrow, bottom-right corner, with a   smooth fade-in and hover effect.
+
+Add proper page   titles: 'Karina' for home, 'Gallery — Karina' for gallery, 'About — Karina'   for about, 'Contact — Karina' for contact. Add a minimal favicon — a white   letter K on a black background as an inline SVG data URI.
