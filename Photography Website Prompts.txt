@@ -19,3 +19,10 @@ Add smooth fade-in   animations to every page. When the page loads, the hero tex
  Add a   scroll-to-top button that appears after the user scrolls down 400px on any   page — a small white circle with an upward arrow, bottom-right corner, with a   smooth fade-in and hover effect.
 
 Add proper page   titles: 'Karina' for home, 'Gallery — Karina' for gallery, 'About — Karina'   for about, 'Contact — Karina' for contact. Add a minimal favicon — a white   letter K on a black background as an inline SVG data URI.
+
+On mobile screens, the navigation links overflow horizontally. Convert the navigation to a hamburger menu icon (☰) that opens a full-screen overlay with the links centered vertically. Add a smooth slide-in animation.
+
+On phones, the gallery images break out of the screen and cause horizontal scrolling. Fix all images to be fully responsive - max-width: 100% on all images.
+
+The about page two-column layout doesn't stack on mobile. On screens under 768px, stack the headshot above the bio text instead of side-by-side.
+
