@@ -9,6 +9,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Viaoda+Libre&family=Pinyon+Script&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /*
+   * Karina — wedding photographer sample site, homepage.
+   * Strictly black/white palette per the brief (see "Photography Website
+   * Prompts.txt"): #000000 background, #FFFFFF text, no color accents
+   * anywhere. Every other page (about.html, gallery.html, contact.html)
+   * embeds its own near-identical copy of the nav/mobile-menu/scroll-top
+   * CSS+JS below — there's no shared stylesheet/script in this project, so
+   * a change to any of those shared pieces (e.g. the hamburger's
+   * alignment, the focus-visible color) needs to be mirrored in the other
+   * three files too, or the pages will behave inconsistently.
+   */
   * {
     margin: 0;
     padding: 0;
@@ -26,7 +37,13 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  a {
+  /* a:visited is set explicitly because browsers apply their own default
+     (usually purple-ish) color to visited links regardless of the plain
+     `a` rule above — without this, "Home"/"Gallery"/etc. would silently
+     pick up a color accent the brief explicitly rules out ("no color
+     accents") the moment a user had already visited that page. */
+  a,
+  a:visited {
     color: #FFFFFF;
     text-decoration: none;
   }
@@ -37,7 +54,79 @@
     display: block;
   }
 
-  /* Navigation */
+  /* "sr-only" pattern: keeps content in the accessibility tree (readable by
+     screen readers, reachable by keyboard) while removing it from visual
+     layout. Used below for the skip link (visible only once focused) and
+     could be reused for any other visually-hidden text this page needs
+     later. Do not use display:none/visibility:hidden for this — those also
+     hide the content from screen readers, defeating the purpose. */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Skip-to-content link (WCAG 2.4.1 Bypass Blocks). Parked off-screen
+     above the viewport until it receives keyboard focus — see :focus below
+     — so it never affects layout or shows up for mouse/touch users. Must
+     stay the very first focusable element on the page, and its href must
+     keep pointing at <main id="main-content"> below. */
+  .skip-link {
+    position: fixed;
+    top: -60px;
+    left: 16px;
+    z-index: 3000;
+    background-color: #FFFFFF;
+    color: #000000;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 20px;
+    border-radius: 4px;
+    transition: top 0.2s ease;
+  }
+
+  .skip-link:focus {
+    top: 16px;
+    outline: 2px solid #FFFFFF;
+    outline-offset: 3px;
+  }
+
+  /* Focus indicators (WCAG 2.4.7 Focus Visible). Nothing on this site
+     defined a custom focus style before — buttons/links just fell back to
+     each browser's own default outline, which isn't guaranteed to be
+     legible against a pure black page. White with a small positive offset
+     reads clearly everywhere on this site: even on a white-filled control
+     like .submit-btn/.scroll-top, offsetting the ring *outward* means it
+     lands on the surrounding black page, not on the button's own white
+     fill, so it stays visible there too. :focus-visible (not plain
+     :focus) means a mouse click won't show the ring, only keyboard/AT
+     focus. Form <input>/<textarea> fields (contact.html) define their own
+     focus style instead — a border/underline change reads better there
+     than an outline — so they're deliberately not included in this
+     selector. */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 3px;
+  }
+
+  /* ============================================================
+     Navigation
+     .navbar is intentionally position:absolute with no background (per
+     the brief: "minimal, white text, no background") so it overlays
+     transparently on the hero image below — unlike the other three pages,
+     whose navbar is position:sticky with a solid black background since
+     they don't have a hero image behind them. .hero-nav-scrim just below
+     is a subtle protective gradient specific to that transparent-over-photo
+     situation — see its comment for why.
+     ============================================================ */
   .navbar {
     position: absolute;
     top: 0;
@@ -49,6 +138,27 @@
     gap: 3rem;
     padding: 2rem 1rem;
     z-index: 10;
+  }
+
+  /* Purely decorative, pointer-events:none so it never intercepts clicks
+     meant for the nav above it. Only exists because .navbar itself has no
+     background — without some darkening near the top of the hero image, a
+     bright sky or dress in that region could drop the white nav text below
+     readable contrast. The hero's own .hero-overlay doesn't help here: it
+     sits inside .hero's stacking context while .navbar has an explicit
+     z-index that stacks above it, so the nav is *not* protected by that
+     overlay. This is a light, top-only version of the same idea — a soft
+     black-to-transparent fade roughly matching the navbar's height, tuned
+     to stay subtle rather than reading as an actual navbar background. */
+  .hero-nav-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 140px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+    z-index: 5;
+    pointer-events: none;
   }
 
   .navbar a {
@@ -80,7 +190,21 @@
     cursor: pointer;
   }
 
-  /* Mobile menu overlay */
+  /* Mobile menu overlay. Slides in from the right via transform when
+     .open is added — see openMobileMenu()/closeMobileMenu() in the script
+     below.
+
+     visibility:hidden (paired with the existing pointer-events:none) is
+     load-bearing, not decorative: CSS transform alone does *not* remove an
+     element from the tab order or the accessibility tree, only from view.
+     Without visibility:hidden here, the close button and all four links
+     inside this menu would remain real, reachable Tab stops — sitting
+     invisibly off-screen — on every single page load, even on desktop
+     where the hamburger that opens this menu isn't shown at all. A
+     keyboard user tabbing through the page would hit five confusing,
+     invisible stops for no visible reason. .mobile-menu.open below
+     restores visibility (and hover/keyboard interactivity) only while the
+     menu is actually meant to be usable. */
   .mobile-menu {
     position: fixed;
     inset: 0;
@@ -91,14 +215,17 @@
     justify-content: center;
     gap: 2.5rem;
     transform: translateX(100%);
+    visibility: hidden;
     pointer-events: none;
-    transition: transform 0.45s ease;
+    transition: transform 0.45s ease, visibility 0s linear 0.45s;
     z-index: 2000;
   }
 
   .mobile-menu.open {
     transform: translateX(0);
+    visibility: visible;
     pointer-events: auto;
+    transition: transform 0.45s ease; /* visibility flips immediately on open (no delay needed going *to* visible) */
   }
 
   .mobile-menu a {
@@ -212,7 +339,14 @@
     color: #E5E5E5;
   }
 
-  /* Gallery Preview */
+  /* Gallery Preview
+     Real <img> elements (not CSS background-images) specifically so each
+     photo has an actual accessible name via alt text — a background-image
+     on an empty <div>, which this used to be, exposes literally nothing to
+     a screen reader: not even that a photo is there. object-fit:cover
+     replaces what background-size:cover was doing, and aspect-ratio still
+     controls the box shape now that height isn't implied by a background
+     image. */
   .gallery-preview {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -223,10 +357,11 @@
   }
 
   .gallery-preview .thumb {
+    display: block;
+    width: 100%;
     aspect-ratio: 4 / 5;
-    background-color: #1a1a1a;
-    background-size: cover;
-    background-position: center;
+    object-fit: cover;
+    background-color: #1a1a1a; /* shows while the image loads, or if the file is missing */
     filter: grayscale(100%);
     transition: filter 0.3s ease, transform 0.3s ease;
   }
@@ -242,10 +377,6 @@
 
   .gallery-preview .thumb.fade-in-scroll:nth-child(2) { transition-delay: 0.1s; }
   .gallery-preview .thumb.fade-in-scroll:nth-child(3) { transition-delay: 0.2s; }
-
-  .thumb:nth-child(1) { background-image: url('images/gallery-1.jpg'); }
-  .thumb:nth-child(2) { background-image: url('images/gallery-2.jpg'); }
-  .thumb:nth-child(3) { background-image: url('images/gallery-3.jpg'); }
 
   /* Scroll to top button */
   .scroll-top {
@@ -288,7 +419,11 @@
   /* Responsive */
   @media (max-width: 768px) {
     .navbar {
-      justify-content: flex-start;
+      /* Was justify-content:flex-start, which left the hamburger sitting at
+         the far *left* of the navbar once .nav-links (the only other flex
+         item) disappears below this breakpoint. flex-end pushes it to the
+         far right instead. */
+      justify-content: flex-end;
       padding: 1.5rem 1rem;
     }
 
@@ -311,58 +446,108 @@
       height: 42px;
     }
   }
+
+  /* Honors the OS-level "reduce motion" setting (WCAG 2.2.2 for the
+     continuously-available fade-in-scroll transitions; in the spirit of
+     2.3.3 for the hero's translateY drift on load, a textbook
+     motion-sensitivity trigger). Content still appears — .in-view /
+     .open / .show still get applied by the JS exactly as before — this
+     only removes the animated transition getting there. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-name,
+    .hero-tagline {
+      animation: none;
+      opacity: 1;
+    }
+
+    .fade-in-scroll,
+    .gallery-preview .thumb.fade-in-scroll,
+    .mobile-menu,
+    .mobile-menu.open,
+    .scroll-top {
+      transition: none;
+    }
+  }
 </style>
 </head>
 <body>
 
-  <nav class="navbar">
+  <!-- Skip-to-content link. Must stay the first focusable element on the
+       page — see .skip-link above for the mechanics. -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ================= NAVIGATION =================
+       Desktop: centered link list, no hamburger. Below the 768px
+       breakpoint (see CSS above) .nav-links is hidden and .hamburger
+       becomes visible, now aligned to the right via justify-content:
+       flex-end on .navbar. Clicking it opens #mobileMenu, a full-screen
+       overlay — see the script at the bottom of this file for
+       openMobileMenu()/closeMobileMenu(), the focus trap, and why
+       aria-expanded/aria-controls are set the way they are. -->
+  <nav class="navbar" aria-label="Primary">
     <div class="nav-links">
-      <a href="#home" class="active">Home</a>
+      <a href="#home" class="active" aria-current="page">Home</a>
       <a href="gallery.html">Gallery</a>
       <a href="about.html">About</a>
       <a href="contact.html">Contact</a>
     </div>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">&#9776;</button>
+    <button type="button" class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">&#9776;</button>
   </nav>
+  <div class="hero-nav-scrim" aria-hidden="true"></div>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">&times;</button>
-    <a href="#home" class="active">Home</a>
+  <!-- Full-screen mobile nav overlay — see the long CSS comment on
+       .mobile-menu above for why visibility:hidden matters here, and the
+       script below for the open/close/focus-trap logic. aria-label gives
+       this landmark a name distinct from the desktop <nav> above (both
+       exist in the DOM at once; only one is ever visible/interactive at a
+       given viewport width). -->
+  <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile">
+    <button type="button" class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">&times;</button>
+    <a href="#home" class="active" aria-current="page">Home</a>
     <a href="gallery.html">Gallery</a>
     <a href="about.html">About</a>
     <a href="contact.html">Contact</a>
-  </div>
+  </nav>
 
-  <section class="hero" id="home">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <h1 class="hero-name">Karina</h1>
-      <p class="hero-tagline">Capturing Love Stories</p>
-    </div>
-  </section>
+  <main id="main-content">
 
-  <section class="intro fade-in-scroll">
-    <p>
-      I'm Karina, a wedding photographer devoted to telling the quiet, honest
-      moments of your day — the glances, the laughter, the stillness between
-      vows. Every story deserves to be remembered exactly as it felt.
-    </p>
-  </section>
+    <section class="hero" id="home">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-name">Karina</h1>
+        <p class="hero-tagline">Capturing Love Stories</p>
+      </div>
+    </section>
 
-  <section class="gallery-preview" id="gallery">
-    <div class="thumb fade-in-scroll"></div>
-    <div class="thumb fade-in-scroll"></div>
-    <div class="thumb fade-in-scroll"></div>
-  </section>
+    <section class="intro fade-in-scroll">
+      <p>
+        I'm Karina, a wedding photographer devoted to telling the quiet, honest
+        moments of your day — the glances, the laughter, the stillness between
+        vows. Every story deserves to be remembered exactly as it felt.
+      </p>
+    </section>
 
-  <button class="scroll-top" id="scrollTopBtn" aria-label="Scroll to top">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <section class="gallery-preview" id="gallery" aria-label="Gallery preview">
+      <img class="thumb fade-in-scroll" src="images/gallery-1.jpg" alt="Preview of a wedding photograph from the gallery">
+      <img class="thumb fade-in-scroll" src="images/gallery-2.jpg" alt="Preview of a wedding photograph from the gallery">
+      <img class="thumb fade-in-scroll" src="images/gallery-3.jpg" alt="Preview of a wedding photograph from the gallery">
+    </section>
+
+  </main>
+
+  <button type="button" class="scroll-top" id="scrollTopBtn" aria-label="Scroll to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <line x1="12" y1="19" x2="12" y2="5"></line>
       <polyline points="5 12 12 5 19 12"></polyline>
     </svg>
   </button>
 
   <script>
+    // Reveals each .fade-in-scroll element (intro paragraph, gallery
+    // preview thumbs) the first time it scrolls into view, then stops
+    // watching it — the reveal only ever happens once. Adjustable: raise
+    // `threshold` (0-1) to require more of the element visible before it
+    // reveals, or lower it to trigger earlier.
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -374,16 +559,28 @@
 
     document.querySelectorAll('.fade-in-scroll').forEach((el) => revealObserver.observe(el));
 
+    // Adjustable: 400 (px) is how far down the page the user has to scroll
+    // before the scroll-to-top button fades in — lower it to offer the
+    // button sooner, raise it if it's appearing before the page is long
+    // enough to need it.
     const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     window.addEventListener('scroll', () => {
       scrollTopBtn.classList.toggle('show', window.scrollY > 400);
     });
 
     scrollTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     });
 
+    // ============================================================
+    // Mobile hamburger menu
+    // #hamburgerBtn is a disclosure-widget button for #mobileMenu.
+    // aria-expanded is kept in sync on every open/close so screen-reader
+    // users know whether the menu is currently showing — the visual-only
+    // slide animation means nothing to them on its own (WCAG 4.1.2).
+    // ============================================================
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     const mobileMenuClose = document.getElementById('mobileMenuClose');
@@ -391,19 +588,48 @@
     function openMobileMenu() {
       mobileMenu.classList.add('open');
       document.body.style.overflow = 'hidden';
+      hamburgerBtn.setAttribute('aria-expanded', 'true');
+      // Moves focus into the now-visible menu (WCAG 2.4.3 Focus Order) —
+      // without this, focus would stay on the hamburger button while the
+      // *visual* focus ring is hidden behind the overlay, disorienting for
+      // keyboard/AT users.
+      mobileMenuClose.focus();
     }
 
     function closeMobileMenu() {
       mobileMenu.classList.remove('open');
       document.body.style.overflow = '';
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      // Returns focus to the control that opened the menu. Harmless to run
+      // even when closing via a link click (the page navigates away
+      // immediately after), so every close path shares this one function.
+      hamburgerBtn.focus();
     }
 
     hamburgerBtn.addEventListener('click', openMobileMenu);
     mobileMenuClose.addEventListener('click', closeMobileMenu);
     mobileMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileMenu));
 
+    // Basic focus trap: while the menu is open, Tab/Shift+Tab cycles
+    // through just its own focusable elements (close button + 4 links)
+    // instead of escaping into content behind the overlay that's
+    // currently invisible under it.
+    mobileMenu.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusable = mobileMenu.querySelectorAll('a[href], button');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeMobileMenu();
+      if (e.key === 'Escape' && mobileMenu.classList.contains('open')) closeMobileMenu();
     });
   </script>
 
