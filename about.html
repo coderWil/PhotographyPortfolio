@@ -325,8 +325,30 @@
     height: 18px;
   }
 
-  /* Responsive */
+  /* Responsive
+     Nav collapses to the hamburger at 768px, matching index.html — this
+     used to be a narrower 600px here (and on gallery.html/contact.html),
+     which left a 600-768px gap where .nav-links was still forced onto one
+     line with no hamburger fallback, squeezing/overflowing at exactly the
+     "small but not phone-sized" widths users are most likely to actually
+     resize to. All four pages now agree on 768px for this. */
   @media (max-width: 768px) {
+    .navbar {
+      /* Was justify-content:flex-start, which left the hamburger at the far
+         left of the navbar once .nav-links disappears below this
+         breakpoint. flex-end pushes it to the far right instead. */
+      justify-content: flex-end;
+      padding: 1.5rem 1rem;
+    }
+
+    .nav-links {
+      display: none;
+    }
+
+    .hamburger {
+      display: block;
+    }
+
     .about {
       flex-direction: column;
       text-align: center;
@@ -344,22 +366,6 @@
   }
 
   @media (max-width: 600px) {
-    .navbar {
-      /* Was justify-content:flex-start, which left the hamburger at the far
-         *left* of the navbar once .nav-links disappears below this
-         breakpoint. flex-end pushes it to the far right instead. */
-      justify-content: flex-end;
-      padding: 1.5rem 1rem;
-    }
-
-    .nav-links {
-      display: none;
-    }
-
-    .hamburger {
-      display: block;
-    }
-
     .about-photo {
       width: 200px;
       height: 200px;
